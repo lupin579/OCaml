@@ -131,8 +131,10 @@ env |- n : instantiate(env(n)) -| {}
 - Changes a type scheme to a type
   - Get rid of the **'a ... 'an** before the dot
   - substitute a fresh type variable for each of them
-- E.g., **'a . 'a -> 'a**
+
+e.g., **'a . 'a -> 'a**
   becomes **'b -> 'b** for a fresh **'b**
+
 
 ## Mutability and polymorphism
 *Mutability always makes our lives worse*
@@ -140,6 +142,53 @@ What do all these have in common?
 - ref None
 - ref []
 - ref (fun x -> x)
+Weak type variables
+
+### The problem
+```ocaml
+let id = fun x -> x;;
+let r = ref id;;(generialized to a type scheme: r : 'a . ('a -> 'a) ref)
+(* val r : ('_weak1 -> '_weak1) ref = {contents = <fun>} *)
+r := succ;;(instantiate to (int -> int) ref)
+(* - : unit = () *)
+!r true;;(instantiate to (bool -> bool) ref)
+(* error *)
+```
+
+### The solution
+- Value restriction: mutable polymorphic value can never hold more than one type
+- OCaml currently implements it with weak type variables
+  - Stand for a single unkonwn type, like our type variables did before generialization
+  - Eventually instantiated with actual type(Example)  
+
+## Discrimination:Why non-ref doesn't have this kind of problems?
+In the former section, what we do is generialization for the let polymorphism,
+the essence is when we encounter a use of this let('a (type)) variable in the type inference,
+what we do is instantiate(yield) a new type variable(e.g. 'b = ...) to be used in the constraints,
+instead of directly use the type variable of let('a) for the constraint,
+so we avoid the contradiction(like the code example in **polymorphsim is tricky** section)
+
+But in a mutable variable, because of the mutability, there can be many values in one place,
+so we can only restrict one pending type for a place to avoid values of different types are stored in one place.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
